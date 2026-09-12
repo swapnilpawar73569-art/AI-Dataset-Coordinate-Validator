@@ -1,0 +1,37 @@
+[
+  {
+    "label": "Point_A_Delhi",
+    "latitude": 28.6139,
+    "longitude": 77.2090
+  },
+  {
+    "label": "Point_B_Mumbai",
+    "latitude": 19.0760,
+    "longitude": 72.8777
+  },
+  {
+    "label": "Point_C_OutOfRangeLat",
+    "latitude": 95.0000,
+    "longitude": 45.0000
+  },
+  {
+    "label": "Point_D_MissingLat",
+    "latitude": null,
+    "longitude": 12.3456
+  },
+  {
+    "label": "Point_E_InvalidFormatLon",
+    "latitude": 13.0827,
+    "longitude": "INVALID_NUM"
+  },
+  {
+    "label": "Point_F_DuplicateDelhi",
+    "latitude": 28.6139,
+    "longitude": 77.2090
+  },
+  {
+    "label": "Point_G_OutlierAntarctica",
+    "latitude": -85.0000,
+    "longitude": -170.0000
+  }
+]

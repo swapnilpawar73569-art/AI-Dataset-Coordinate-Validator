@@ -1,8 +1,7 @@
 package com.oopsproject.validator.exception;
 
 /**
- * Thrown when the dataset file is missing, malformed, or unreadable.
- * Owner: [Teammate name here]
+ * Base checked exception thrown when dataset file operations fail or datasets are invalid.
  */
 public class InvalidDatasetException extends Exception {
     public InvalidDatasetException(String message) {

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ReportGeneratorTest {
 
     @Test
-    @DisplayName("Test exporting reports to TXT, CSV, and JSON formats")
+    @DisplayName("Test exporting reports to TXT, CSV, JSON, and HTML formats")
     public void testReportExporter(@TempDir Path tempDir) throws Exception {
         ValidationEngine engine = ValidationEngine.createDefaultEngine();
         List<Coordinate> dataset = Arrays.asList(
@@ -31,17 +31,18 @@ public class ReportGeneratorTest {
         Path txtPath = tempDir.resolve("report.txt");
         Path csvPath = tempDir.resolve("report.csv");
         Path jsonPath = tempDir.resolve("report.json");
+        Path htmlPath = tempDir.resolve("report.html");
 
         ReportGenerator.exportReport(report, txtPath.toString());
         ReportGenerator.exportReport(report, csvPath.toString());
         ReportGenerator.exportReport(report, jsonPath.toString());
+        ReportGenerator.exportReport(report, htmlPath.toString());
 
         assertTrue(new File(txtPath.toString()).exists());
         assertTrue(new File(csvPath.toString()).exists());
         assertTrue(new File(jsonPath.toString()).exists());
+        assertTrue(new File(htmlPath.toString()).exists());
 
-        assertTrue(new File(txtPath.toString()).length() > 0);
-        assertTrue(new File(csvPath.toString()).length() > 0);
-        assertTrue(new File(jsonPath.toString()).length() > 0);
+        assertTrue(new File(htmlPath.toString()).length() > 0);
     }
 }

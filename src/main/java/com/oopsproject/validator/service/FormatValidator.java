@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Validates that latitude and longitude values are present and correctly formatted numbers.
+ * Extends AbstractValidator (Inheritance).
  */
-public class FormatValidator implements Validator {
+public class FormatValidator extends AbstractValidator {
 
     @Override
     public String getRuleName() {
@@ -16,8 +17,7 @@ public class FormatValidator implements Validator {
     }
 
     @Override
-    public boolean isValid(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null) return false;
+    protected boolean doValidate(Coordinate coordinate, List<Coordinate> dataset) {
         return !coordinate.hasMissingValue() && !coordinate.hasFormatError();
     }
 

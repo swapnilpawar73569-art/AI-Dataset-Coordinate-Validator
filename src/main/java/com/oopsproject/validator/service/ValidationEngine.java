@@ -34,6 +34,7 @@ public class ValidationEngine {
         engine.addValidator(new DuplicateValidator());
         engine.addValidator(new OutlierValidator());
         engine.addValidator(new PrecisionValidator());
+        engine.addValidator(new BoundingBoxValidator());
         return engine;
     }
 

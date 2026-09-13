@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Validates that coordinate records do not repeat identical latitude and longitude values across the dataset.
+ * Extends AbstractValidator (Inheritance).
  */
-public class DuplicateValidator implements Validator {
+public class DuplicateValidator extends AbstractValidator {
 
     @Override
     public String getRuleName() {
@@ -16,15 +17,14 @@ public class DuplicateValidator implements Validator {
     }
 
     @Override
-    public boolean isValid(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || dataset == null) {
+    protected boolean doValidate(Coordinate coordinate, List<Coordinate> dataset) {
+        if (!coordinate.isParseable() || dataset == null) {
             return true;
         }
 
         for (Coordinate other : dataset) {
             if (other.getRowNumber() != coordinate.getRowNumber() && other.isParseable()) {
                 if (coordinate.equals(other)) {
-                    // Duplicate found
                     return false;
                 }
             }
@@ -34,7 +34,7 @@ public class DuplicateValidator implements Validator {
 
     @Override
     public String getErrorMessage(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || dataset == null || isValid(coordinate, dataset)) {
+        if (isNullOrUnparseable(coordinate) || dataset == null || isValid(coordinate, dataset)) {
             return "";
         }
 

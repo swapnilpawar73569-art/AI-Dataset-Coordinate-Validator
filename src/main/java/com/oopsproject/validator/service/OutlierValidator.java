@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Detects statistical outliers based on standard deviation distance from dataset centroid.
+ * Extends AbstractValidator (Inheritance).
  */
-public class OutlierValidator implements Validator {
+public class OutlierValidator extends AbstractValidator {
 
     private final double sigmaThreshold;
 
@@ -26,14 +27,13 @@ public class OutlierValidator implements Validator {
     }
 
     @Override
-    public boolean isValid(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || dataset == null) {
+    protected boolean doValidate(Coordinate coordinate, List<Coordinate> dataset) {
+        if (!coordinate.isParseable() || dataset == null) {
             return true;
         }
 
         List<Coordinate> validCoords = getParseableValidRangeCoords(dataset);
         if (validCoords.size() < 3) {
-            // Need at least 3 points for statistical outlier calculation
             return true;
         }
 
@@ -55,7 +55,7 @@ public class OutlierValidator implements Validator {
 
     @Override
     public String getErrorMessage(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || dataset == null || isValid(coordinate, dataset)) {
+        if (isNullOrUnparseable(coordinate) || dataset == null || isValid(coordinate, dataset)) {
             return "";
         }
 

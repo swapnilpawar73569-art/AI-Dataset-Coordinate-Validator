@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Validates that latitude is within [-90.0, 90.0] and longitude is within [-180.0, 180.0].
+ * Extends AbstractValidator (Inheritance).
  */
-public class RangeValidator implements Validator {
+public class RangeValidator extends AbstractValidator {
 
     public static final double MIN_LATITUDE = -90.0;
     public static final double MAX_LATITUDE = 90.0;
@@ -21,9 +22,8 @@ public class RangeValidator implements Validator {
     }
 
     @Override
-    public boolean isValid(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable()) {
-            // Cannot evaluate range on unparseable/missing coordinates
+    protected boolean doValidate(Coordinate coordinate, List<Coordinate> dataset) {
+        if (!coordinate.isParseable()) {
             return true;
         }
         double lat = coordinate.getLatitude();
@@ -33,7 +33,7 @@ public class RangeValidator implements Validator {
 
     @Override
     public String getErrorMessage(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || isValid(coordinate, dataset)) {
+        if (isNullOrUnparseable(coordinate) || isValid(coordinate, dataset)) {
             return "";
         }
 

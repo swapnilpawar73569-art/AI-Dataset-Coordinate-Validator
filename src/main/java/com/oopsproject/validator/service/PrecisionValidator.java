@@ -7,13 +7,14 @@ import java.util.List;
 
 /**
  * Validates coordinate decimal place precision and consistency.
+ * Extends AbstractValidator (Inheritance).
  */
-public class PrecisionValidator implements Validator {
+public class PrecisionValidator extends AbstractValidator {
 
     private final int maxDecimalPlaces;
 
     public PrecisionValidator() {
-        this(8); // Default maximum 8 decimal places (sub-millimeter precision)
+        this(8);
     }
 
     public PrecisionValidator(int maxDecimalPlaces) {
@@ -26,8 +27,8 @@ public class PrecisionValidator implements Validator {
     }
 
     @Override
-    public boolean isValid(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable()) {
+    protected boolean doValidate(Coordinate coordinate, List<Coordinate> dataset) {
+        if (!coordinate.isParseable()) {
             return true;
         }
 
@@ -39,7 +40,7 @@ public class PrecisionValidator implements Validator {
 
     @Override
     public String getErrorMessage(Coordinate coordinate, List<Coordinate> dataset) {
-        if (coordinate == null || !coordinate.isParseable() || isValid(coordinate, dataset)) {
+        if (isNullOrUnparseable(coordinate) || isValid(coordinate, dataset)) {
             return "";
         }
 

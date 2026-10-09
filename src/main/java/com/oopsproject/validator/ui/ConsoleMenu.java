@@ -45,6 +45,9 @@ public class ConsoleMenu {
         while (running) {
             printMenu();
             System.out.print("👉 Enter your choice (1-6): ");
+            if (!scanner.hasNextLine()) {
+                break;
+            }
             String input = scanner.nextLine().trim();
 
             switch (input) {

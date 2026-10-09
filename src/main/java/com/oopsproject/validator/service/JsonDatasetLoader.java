@@ -31,9 +31,22 @@ public class JsonDatasetLoader implements DatasetLoader {
             throw new DatasetReadException("Dataset file not found: " + filePath);
         }
 
+        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
+            return load(reader);
+        } catch (IOException e) {
+            throw new DatasetReadException("Failed to read JSON file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Coordinate> load(Reader reader) throws DatasetReadException {
+        if (reader == null) {
+            throw new DatasetReadException("Reader cannot be null.");
+        }
+
         List<Coordinate> coordinates = new ArrayList<>();
 
-        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
+        try {
             JsonElement rootElement = JsonParser.parseReader(reader);
             JsonArray jsonArray = null;
 
@@ -105,8 +118,6 @@ public class JsonDatasetLoader implements DatasetLoader {
 
                 coordinates.add(coord);
             }
-        } catch (IOException e) {
-            throw new DatasetReadException("Failed to read JSON dataset file: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new DatasetReadException("Failed to parse JSON file structure: " + e.getMessage(), e);
         }

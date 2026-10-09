@@ -29,4 +29,25 @@ public class DatasetLoaderFactory {
                     ". Only .csv and .json are supported.");
         }
     }
+
+    /**
+     * Factory method to obtain appropriate loader based on format name (csv or json).
+     *
+     * @param format format identifier ("csv" or "json")
+     * @return DatasetLoader instance
+     * @throws UnsupportedFormatException if format is not supported
+     */
+    public static DatasetLoader getLoaderForFormat(String format) throws UnsupportedFormatException {
+        if (format == null || format.trim().isEmpty()) {
+            throw new UnsupportedFormatException("Format cannot be null or empty.");
+        }
+        String f = format.toLowerCase().trim();
+        if (f.equals("csv") || f.endsWith(".csv")) {
+            return new CsvDatasetLoader();
+        } else if (f.equals("json") || f.endsWith(".json")) {
+            return new JsonDatasetLoader();
+        } else {
+            throw new UnsupportedFormatException("Unsupported dataset format: " + format + ". Only 'csv' and 'json' are supported.");
+        }
+    }
 }

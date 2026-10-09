@@ -33,6 +33,19 @@ public class CsvDatasetLoader implements DatasetLoader {
             throw new DatasetReadException("Path is not a regular file: " + filePath);
         }
 
+        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
+            return load(reader);
+        } catch (IOException e) {
+            throw new DatasetReadException("Failed to read CSV dataset file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<Coordinate> load(Reader reader) throws DatasetReadException {
+        if (reader == null) {
+            throw new DatasetReadException("Reader cannot be null.");
+        }
+
         List<Coordinate> coordinates = new ArrayList<>();
 
         CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
@@ -42,8 +55,7 @@ public class CsvDatasetLoader implements DatasetLoader {
                 .setIgnoreEmptyLines(true)
                 .build();
 
-        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8);
-             CSVParser parser = new CSVParser(reader, csvFormat)) {
+        try (CSVParser parser = new CSVParser(reader, csvFormat)) {
 
             int rowCounter = 1;
             for (CSVRecord record : parser) {

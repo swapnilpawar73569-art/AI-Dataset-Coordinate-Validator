@@ -69,4 +69,24 @@ public class BoundingBoxValidator extends AbstractValidator {
 
         return String.join(", ", errors);
     }
+
+    public String getRegionName() {
+        return regionName;
+    }
+
+    public double getMinLatitude() {
+        return minLatitude;
+    }
+
+    public double getMaxLatitude() {
+        return maxLatitude;
+    }
+
+    public double getMinLongitude() {
+        return minLongitude;
+    }
+
+    public double getMaxLongitude() {
+        return maxLongitude;
+    }
 }

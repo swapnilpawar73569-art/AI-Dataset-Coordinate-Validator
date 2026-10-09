@@ -50,6 +50,35 @@ public class ValidationReport {
         return invalidCount;
     }
 
+    public double getPassRate() {
+        return totalCount > 0 ? (validCount * 100.0 / totalCount) : 0.0;
+    }
+
+    public int getDuplicateCount() {
+        return (int) results.stream().filter(r -> r.getErrorMessages().stream()
+                .anyMatch(msg -> msg.toLowerCase().contains("duplicate"))).count();
+    }
+
+    public int getOutlierCount() {
+        return (int) results.stream().filter(r -> r.getErrorMessages().stream()
+                .anyMatch(msg -> msg.toLowerCase().contains("outlier"))).count();
+    }
+
+    public int getBoundingBoxBreachCount() {
+        return (int) results.stream().filter(r -> r.getErrorMessages().stream()
+                .anyMatch(msg -> msg.toLowerCase().contains("outside") || msg.toLowerCase().contains("bounds"))).count();
+    }
+
+    public int getRangeErrorCount() {
+        return (int) results.stream().filter(r -> r.getErrorMessages().stream()
+                .anyMatch(msg -> msg.toLowerCase().contains("range"))).count();
+    }
+
+    public int getFormatErrorCount() {
+        return (int) results.stream().filter(r -> r.getErrorMessages().stream()
+                .anyMatch(msg -> msg.toLowerCase().contains("missing") || msg.toLowerCase().contains("format") || msg.toLowerCase().contains("nan"))).count();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

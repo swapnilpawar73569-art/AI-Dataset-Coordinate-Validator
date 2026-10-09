@@ -37,7 +37,7 @@ public class ConsoleMenu {
         boolean running = true;
         while (running) {
             printMenu();
-            System.out.print("Enter choice (1-5): ");
+            System.out.print("Enter choice (1-7): ");
             String input = scanner.nextLine().trim();
 
             switch (input) {
@@ -54,11 +54,17 @@ public class ConsoleMenu {
                     exportReportMenu();
                     break;
                 case "5":
+                    launchWebMenu();
+                    break;
+                case "6":
+                    launchGuiMenu();
+                    break;
+                case "7":
                     running = false;
                     System.out.println("Exiting Coordinate Validator. Goodbye!");
                     break;
                 default:
-                    System.out.println("Invalid option. Please select 1 through 5.\n");
+                    System.out.println("Invalid option. Please select 1 through 7.\n");
             }
         }
     }
@@ -69,7 +75,9 @@ public class ConsoleMenu {
         System.out.println("2. Run Validation Suite");
         System.out.println("3. View Report Summary");
         System.out.println("4. Export Report to File");
-        System.out.println("5. Exit");
+        System.out.println("5. Launch Web Dashboard (Browser)");
+        System.out.println("6. Launch Desktop Swing GUI");
+        System.out.println("7. Exit");
         if (currentFilePath != null) {
             System.out.println("Current File: " + currentFilePath + " (" + 
                     (currentDataset != null ? currentDataset.size() + " rows loaded" : "not validated") + ")");
@@ -150,6 +158,31 @@ public class ConsoleMenu {
             System.out.println("SUCCESS: Report exported to: " + exportPath);
         } catch (IOException e) {
             System.err.println("ERROR exporting report: " + e.getMessage());
+        }
+    }
+
+    private void launchWebMenu() {
+        System.out.println("\nStarting embedded Web Dashboard server on http://localhost:8080 ...");
+        try {
+            com.oopsproject.validator.server.WebServer server = new com.oopsproject.validator.server.WebServer(8080);
+            server.start();
+            server.openBrowser();
+            System.out.println("Web server started successfully in background at http://localhost:8080");
+        } catch (Exception e) {
+            System.err.println("Failed to start web server: " + e.getMessage());
+        }
+    }
+
+    private void launchGuiMenu() {
+        System.out.println("\nLaunching Desktop Swing GUI...");
+        try {
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                ValidatorGUI gui = new ValidatorGUI();
+                gui.setVisible(true);
+            });
+            System.out.println("Desktop GUI window launched.");
+        } catch (Exception e) {
+            System.err.println("Failed to open GUI (check if display is available): " + e.getMessage());
         }
     }
 }

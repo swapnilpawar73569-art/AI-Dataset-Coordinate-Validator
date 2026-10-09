@@ -1,12 +1,9 @@
 package com.oopsproject.validator.service;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.oopsproject.validator.exception.DatasetReadException;
 import com.oopsproject.validator.model.Coordinate;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,9 +11,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * DatasetLoader implementation for JSON files using Gson.
+ * Loads coordinate datasets from JSON files using pure standard Java.
+ * No external JSON parsing libraries required.
  */
 public class JsonDatasetLoader implements DatasetLoader {
 
@@ -30,11 +30,14 @@ public class JsonDatasetLoader implements DatasetLoader {
         if (!file.exists()) {
             throw new DatasetReadException("Dataset file not found: " + filePath);
         }
+        if (!file.isFile()) {
+            throw new DatasetReadException("Path is not a regular file: " + filePath);
+        }
 
-        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
             return load(reader);
         } catch (IOException e) {
-            throw new DatasetReadException("Failed to read JSON file: " + e.getMessage(), e);
+            throw new DatasetReadException("Failed to read JSON dataset file: " + e.getMessage(), e);
         }
     }
 
@@ -44,100 +47,93 @@ public class JsonDatasetLoader implements DatasetLoader {
             throw new DatasetReadException("Reader cannot be null.");
         }
 
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader br = (reader instanceof BufferedReader) ? (BufferedReader) reader : new BufferedReader(reader)) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            throw new DatasetReadException("Failed to read JSON stream: " + e.getMessage(), e);
+        }
+
+        return parseJsonString(content.toString());
+    }
+
+    @Override
+    public List<Coordinate> loadFromString(String content) throws DatasetReadException {
+        if (content == null) {
+            throw new DatasetReadException("Dataset content cannot be null.");
+        }
+        return parseJsonString(content);
+    }
+
+    private List<Coordinate> parseJsonString(String json) {
         List<Coordinate> coordinates = new ArrayList<>();
+        Pattern objectPattern = Pattern.compile("\\{([^}]+)\\}");
+        Matcher objectMatcher = objectPattern.matcher(json);
 
-        try {
-            JsonElement rootElement = JsonParser.parseReader(reader);
-            JsonArray jsonArray = null;
+        int rowCounter = 1;
+        while (objectMatcher.find()) {
+            String objectBody = objectMatcher.group(1);
 
-            if (rootElement.isJsonArray()) {
-                jsonArray = rootElement.getAsJsonArray();
-            } else if (rootElement.isJsonObject()) {
-                JsonObject rootObj = rootElement.getAsJsonObject();
-                if (rootObj.has("coordinates") && rootObj.get("coordinates").isJsonArray()) {
-                    jsonArray = rootObj.getAsJsonArray("coordinates");
-                } else if (rootObj.has("data") && rootObj.get("data").isJsonArray()) {
-                    jsonArray = rootObj.getAsJsonArray("data");
-                } else {
-                    throw new DatasetReadException("JSON object must contain a 'coordinates' or 'data' array.");
+            String label = extractField(objectBody, "label", "id", "name");
+            String latRaw = extractField(objectBody, "latitude", "lat");
+            String lonRaw = extractField(objectBody, "longitude", "lon", "lng", "long");
+
+            boolean latMissing = latRaw == null || latRaw.trim().isEmpty() || latRaw.equalsIgnoreCase("null");
+            boolean lonMissing = lonRaw == null || lonRaw.trim().isEmpty() || lonRaw.equalsIgnoreCase("null");
+
+            Double latitude = null;
+            boolean latInvalidFormat = false;
+            if (!latMissing) {
+                try {
+                    latitude = Double.parseDouble(latRaw.trim());
+                } catch (NumberFormatException e) {
+                    latInvalidFormat = true;
                 }
-            } else {
-                throw new DatasetReadException("Invalid JSON root: expected array or object wrapper.");
             }
 
-            int rowCounter = 1;
-            for (JsonElement item : jsonArray) {
-                if (!item.isJsonObject()) {
-                    rowCounter++;
-                    continue;
+            Double longitude = null;
+            boolean lonInvalidFormat = false;
+            if (!lonMissing) {
+                try {
+                    longitude = Double.parseDouble(lonRaw.trim());
+                } catch (NumberFormatException e) {
+                    lonInvalidFormat = true;
                 }
-                JsonObject obj = item.getAsJsonObject();
-
-                String label = getStringProperty(obj, "label", "id", "name");
-                JsonElement latElem = getProperty(obj, "latitude", "lat");
-                JsonElement lonElem = getProperty(obj, "longitude", "lon", "lng", "long");
-
-                String latStr = latElem != null && !latElem.isJsonNull() ? latElem.getAsString() : "";
-                String lonStr = lonElem != null && !lonElem.isJsonNull() ? lonElem.getAsString() : "";
-
-                boolean latMissing = latElem == null || latElem.isJsonNull() || latStr.trim().isEmpty();
-                boolean lonMissing = lonElem == null || lonElem.isJsonNull() || lonStr.trim().isEmpty();
-
-                Double latitude = null;
-                boolean latInvalidFormat = false;
-                if (!latMissing) {
-                    try {
-                        latitude = Double.parseDouble(latStr.trim());
-                    } catch (NumberFormatException e) {
-                        latInvalidFormat = true;
-                    }
-                }
-
-                Double longitude = null;
-                boolean lonInvalidFormat = false;
-                if (!lonMissing) {
-                    try {
-                        longitude = Double.parseDouble(lonStr.trim());
-                    } catch (NumberFormatException e) {
-                        lonInvalidFormat = true;
-                    }
-                }
-
-                Coordinate coord = new Coordinate(
-                        rowCounter++,
-                        label != null ? label.trim() : "Row_" + rowCounter,
-                        latStr,
-                        lonStr,
-                        latitude,
-                        longitude,
-                        latMissing,
-                        lonMissing,
-                        latInvalidFormat,
-                        lonInvalidFormat
-                );
-
-                coordinates.add(coord);
             }
-        } catch (Exception e) {
-            throw new DatasetReadException("Failed to parse JSON file structure: " + e.getMessage(), e);
+
+            Coordinate coord = new Coordinate(
+                    rowCounter++,
+                    label != null ? label : "Row_" + rowCounter,
+                    latRaw != null && !latRaw.equalsIgnoreCase("null") ? latRaw : "",
+                    lonRaw != null && !lonRaw.equalsIgnoreCase("null") ? lonRaw : "",
+                    latitude,
+                    longitude,
+                    latMissing,
+                    lonMissing,
+                    latInvalidFormat,
+                    lonInvalidFormat
+            );
+
+            coordinates.add(coord);
         }
 
         return coordinates;
     }
 
-    private JsonElement getProperty(JsonObject obj, String... names) {
-        for (String name : names) {
-            if (obj.has(name)) {
-                return obj.get(name);
+    private String extractField(String jsonBlock, String... fieldNames) {
+        for (String field : fieldNames) {
+            Pattern p = Pattern.compile("\"" + Pattern.quote(field) + "\"\\s*:\\s*(\"[^\"]*\"|[^,\\s}]+)");
+            Matcher m = p.matcher(jsonBlock);
+            if (m.find()) {
+                String val = m.group(1).trim();
+                if (val.startsWith("\"") && val.endsWith("\"") && val.length() >= 2) {
+                    val = val.substring(1, val.length() - 1);
+                }
+                return val;
             }
-        }
-        return null;
-    }
-
-    private String getStringProperty(JsonObject obj, String... names) {
-        JsonElement elem = getProperty(obj, names);
-        if (elem != null && !elem.isJsonNull()) {
-            return elem.getAsString();
         }
         return null;
     }

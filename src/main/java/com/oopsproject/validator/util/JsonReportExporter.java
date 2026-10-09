@@ -1,9 +1,6 @@
 package com.oopsproject.validator.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.oopsproject.validator.model.Coordinate;
 import com.oopsproject.validator.model.ValidationReport;
 import com.oopsproject.validator.model.ValidationResult;
 
@@ -12,8 +9,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
+/**
+ * Pure Java JSON report exporter without external libraries.
+ */
 public class JsonReportExporter implements ReportExporter {
+
     @Override
     public String getSupportedExtension() {
         return ".json";
@@ -21,33 +23,45 @@ public class JsonReportExporter implements ReportExporter {
 
     @Override
     public void export(ValidationReport report, File targetFile) throws IOException {
-        JsonObject root = new JsonObject();
-        root.addProperty("totalRows", report.getTotalCount());
-        root.addProperty("validRows", report.getValidCount());
-        root.addProperty("invalidRows", report.getInvalidCount());
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n");
+        sb.append("  \"totalRows\": ").append(report.getTotalCount()).append(",\n");
+        sb.append("  \"validRows\": ").append(report.getValidCount()).append(",\n");
+        sb.append("  \"invalidRows\": ").append(report.getInvalidCount()).append(",\n");
+        sb.append("  \"results\": [\n");
 
-        JsonArray resultsArray = new JsonArray();
-        for (ValidationResult res : report.getResults()) {
-            JsonObject item = new JsonObject();
-            var c = res.getCoordinate();
-            item.addProperty("rowNumber", c.getRowNumber());
-            item.addProperty("label", c.getLabel());
-            item.addProperty("rawLatitude", c.getRawLatitude());
-            item.addProperty("rawLongitude", c.getRawLongitude());
-            item.addProperty("status", res.isValid() ? "VALID" : "INVALID");
-            
-            JsonArray errors = new JsonArray();
-            for (String err : res.getErrorMessages()) {
-                errors.add(err);
+        List<ValidationResult> results = report.getResults();
+        for (int i = 0; i < results.size(); i++) {
+            ValidationResult res = results.get(i);
+            Coordinate c = res.getCoordinate();
+            sb.append("    {\n");
+            sb.append("      \"rowNumber\": ").append(c.getRowNumber()).append(",\n");
+            sb.append("      \"label\": \"").append(escapeJson(c.getLabel())).append("\",\n");
+            sb.append("      \"rawLatitude\": \"").append(escapeJson(c.getRawLatitude())).append("\",\n");
+            sb.append("      \"rawLongitude\": \"").append(escapeJson(c.getRawLongitude())).append("\",\n");
+            sb.append("      \"status\": \"").append(res.isValid() ? "VALID" : "INVALID").append("\",\n");
+            sb.append("      \"failureReasons\": [");
+
+            List<String> errors = res.getErrorMessages();
+            for (int j = 0; j < errors.size(); j++) {
+                sb.append("\"").append(escapeJson(errors.get(j))).append("\"");
+                if (j < errors.size() - 1) {
+                    sb.append(", ");
+                }
             }
-            item.add("failureReasons", errors);
-            resultsArray.add(item);
+            sb.append("]\n");
+            sb.append("    }").append(i < results.size() - 1 ? ",\n" : "\n");
         }
-        root.add("results", resultsArray);
+        sb.append("  ]\n");
+        sb.append("}\n");
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try (PrintWriter writer = new PrintWriter(new FileWriter(targetFile, StandardCharsets.UTF_8))) {
-            writer.println(gson.toJson(root));
+            writer.print(sb.toString());
         }
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

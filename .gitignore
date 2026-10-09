@@ -1,5 +1,9 @@
+bin/
 target/
 .idea/
 *.iml
 .DS_Store
 *.class
+report.txt
+report.csv
+report.json

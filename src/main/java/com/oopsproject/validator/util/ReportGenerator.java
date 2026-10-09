@@ -18,7 +18,6 @@ public class ReportGenerator {
         registerExporter(new TxtReportExporter());
         registerExporter(new CsvReportExporter());
         registerExporter(new JsonReportExporter());
-        registerExporter(new HtmlReportExporter());
     }
 
     public static void registerExporter(ReportExporter exporter) {

@@ -347,12 +347,11 @@ public class ValidatorGUI extends JFrame {
 
         JFileChooser chooser = new JFileChooser(new File("."));
         chooser.setDialogTitle("Export Validation Report");
-        chooser.setSelectedFile(new File("validation_report.html"));
+        chooser.setSelectedFile(new File("validation_report.txt"));
 
-        chooser.addChoosableFileFilter(new FileNameExtensionFilter("HTML Report (*.html)", "html"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Text File (*.txt)", "txt"));
         chooser.addChoosableFileFilter(new FileNameExtensionFilter("CSV File (*.csv)", "csv"));
         chooser.addChoosableFileFilter(new FileNameExtensionFilter("JSON File (*.json)", "json"));
-        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Text File (*.txt)", "txt"));
 
         int choice = chooser.showSaveDialog(this);
         if (choice == JFileChooser.APPROVE_OPTION) {

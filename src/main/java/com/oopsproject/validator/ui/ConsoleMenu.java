@@ -9,12 +9,18 @@ import com.oopsproject.validator.service.DatasetLoaderFactory;
 import com.oopsproject.validator.service.ValidationEngine;
 import com.oopsproject.validator.util.ReportGenerator;
 
+import javax.swing.SwingUtilities;
 import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
 /**
- * Interactive Console UI for the AI Dataset Coordinate Validator.
+ * Pure Java Interactive Console Menu for the AI Dataset Coordinate Validator.
+ * 
+ * Simple to explain to Sir:
+ * - Uses java.util.Scanner to take user input from keyboard (System.in).
+ * - A while loop keeps the menu running until option 6 (Exit) is selected.
+ * - A switch-case structure routes user input to corresponding methods.
  */
 public class ConsoleMenu {
 
@@ -30,14 +36,15 @@ public class ConsoleMenu {
     }
 
     public void start() {
-        System.out.println("=================================================");
-        System.out.println("  AI Dataset Coordinate Validator (Console UI)");
-        System.out.println("=================================================");
+        System.out.println("==================================================================");
+        System.out.println("   📍 AI DATASET COORDINATE VALIDATOR & ANOMALY DETECTOR");
+        System.out.println("   Course: Object-Oriented Programming (Java 17)");
+        System.out.println("==================================================================");
 
         boolean running = true;
         while (running) {
             printMenu();
-            System.out.print("Enter choice (1-7): ");
+            System.out.print("👉 Enter your choice (1-6): ");
             String input = scanner.nextLine().trim();
 
             switch (input) {
@@ -54,35 +61,33 @@ public class ConsoleMenu {
                     exportReportMenu();
                     break;
                 case "5":
-                    launchWebMenu();
-                    break;
-                case "6":
                     launchGuiMenu();
                     break;
-                case "7":
+                case "6":
                     running = false;
-                    System.out.println("Exiting Coordinate Validator. Goodbye!");
+                    System.out.println("\nExiting Coordinate Validator. Thank you!\n");
                     break;
                 default:
-                    System.out.println("Invalid option. Please select 1 through 7.\n");
+                    System.out.println("\n[!] Invalid option. Please enter a number between 1 and 6.");
             }
         }
     }
 
     private void printMenu() {
-        System.out.println("\n---------------- MAIN MENU ----------------");
-        System.out.println("1. Load Dataset File (CSV or JSON)");
-        System.out.println("2. Run Validation Suite");
-        System.out.println("3. View Report Summary");
-        System.out.println("4. Export Report to File");
-        System.out.println("5. Launch Web Dashboard (Browser)");
-        System.out.println("6. Launch Desktop Swing GUI");
-        System.out.println("7. Exit");
+        System.out.println("\n----------------------- MAIN MENU -----------------------");
+        System.out.println(" 1. Load Dataset File (CSV or JSON)");
+        System.out.println(" 2. Run Validation Suite (Range, Format, Duplicates, etc.)");
+        System.out.println(" 3. View Validation Report Summary");
+        System.out.println(" 4. Export Report to File (TXT or CSV)");
+        System.out.println(" 5. Launch Desktop GUI Window (Swing)");
+        System.out.println(" 6. Exit");
         if (currentFilePath != null) {
-            System.out.println("Current File: " + currentFilePath + " (" + 
-                    (currentDataset != null ? currentDataset.size() + " rows loaded" : "not validated") + ")");
+            System.out.println("---------------------------------------------------------");
+            System.out.println(" Active Dataset: " + currentFilePath);
+            System.out.println(" Rows Loaded:    " + (currentDataset != null ? currentDataset.size() : 0));
+            System.out.println(" Status:         " + (currentReport != null ? "Validated (" + currentReport.getPassRate() + "% pass rate)" : "Ready to validate"));
         }
-        System.out.println("-------------------------------------------");
+        System.out.println("---------------------------------------------------------");
     }
 
     public void loadDataset(String path) {
@@ -90,36 +95,41 @@ public class ConsoleMenu {
             DatasetLoader loader = DatasetLoaderFactory.getLoader(path);
             this.currentDataset = loader.load(path);
             this.currentFilePath = path;
-            this.currentReport = null; // reset previous report
-            System.out.println("SUCCESS: Loaded " + currentDataset.size() + " coordinate rows from: " + path);
+            this.currentReport = null; // Reset previous report
+            System.out.println("\n[✓] SUCCESS: Loaded " + currentDataset.size() + " rows from '" + path + "'.");
         } catch (InvalidDatasetException e) {
-            System.err.println("ERROR loading dataset: " + e.getMessage());
+            System.err.println("\n[✗] ERROR loading dataset: " + e.getMessage());
         }
     }
 
     private void loadDatasetMenu() {
-        System.out.print("Enter file path (e.g. data/sample_coordinates.csv or .json): ");
+        System.out.print("\nEnter file path [Press Enter for default: data/sample_coordinates.csv]: ");
         String path = scanner.nextLine().trim();
         if (path.isEmpty()) {
-            System.out.println("File path cannot be empty.");
-            return;
+            path = "data/sample_coordinates.csv";
         }
         loadDataset(path);
     }
 
     public void runValidation() {
         if (currentDataset == null || currentDataset.isEmpty()) {
-            System.out.println("No dataset loaded. Please load a file first.");
+            System.out.println("\n[!] No dataset loaded. Please choose Option 1 to load a dataset first.");
             return;
         }
 
         try {
             this.currentReport = validationEngine.validate(currentDataset);
-            System.out.println("\nSUCCESS: Validation executed on " + currentReport.getTotalCount() + " rows.");
-            System.out.println("Result: " + currentReport.getValidCount() + " VALID, " + 
-                    currentReport.getInvalidCount() + " INVALID.");
+            System.out.println("\n[✓] Validation completed successfully!");
+            System.out.println("    Total Rows:    " + currentReport.getTotalCount());
+            System.out.println("    Valid Rows:    " + currentReport.getValidCount());
+            System.out.println("    Invalid Rows:  " + currentReport.getInvalidCount());
+            System.out.printf("    Pass Rate:     %.2f%%%n", currentReport.getPassRate());
+            System.out.println("    Duplicates:    " + currentReport.getDuplicateCount());
+            System.out.println("    Outliers:      " + currentReport.getOutlierCount());
+            System.out.println("    BBox Breaches: " + currentReport.getBoundingBoxBreachCount());
+            System.out.println("\n(Tip: Select Option 3 to view row-by-row failure reasons)");
         } catch (ValidationException e) {
-            System.err.println("ERROR during validation: " + e.getMessage());
+            System.err.println("\n[✗] ERROR during validation: " + e.getMessage());
         }
     }
 
@@ -130,9 +140,9 @@ public class ConsoleMenu {
     private void viewReportMenu() {
         if (currentReport == null) {
             if (currentDataset == null) {
-                System.out.println("No dataset loaded. Please load a file first.");
+                System.out.println("\n[!] No dataset loaded. Please load a file first (Option 1).");
             } else {
-                System.out.println("Validation has not been executed yet. Run option 2 first.");
+                System.out.println("\n[!] Dataset is loaded but not yet validated. Please run validation first (Option 2).");
             }
             return;
         }
@@ -142,47 +152,34 @@ public class ConsoleMenu {
 
     private void exportReportMenu() {
         if (currentReport == null) {
-            System.out.println("No validation report available to export. Load a file and run validation first.");
+            System.out.println("\n[!] No validation report available. Load a file (Option 1) and run validation (Option 2) first.");
             return;
         }
 
-        System.out.print("Enter target export file path (e.g. data/report.txt, report.csv, or report.json): ");
+        System.out.print("\nEnter export path [Default: report.txt]: ");
         String exportPath = scanner.nextLine().trim();
         if (exportPath.isEmpty()) {
-            System.out.println("Export path cannot be empty.");
-            return;
+            exportPath = "report.txt";
         }
 
         try {
             ReportGenerator.exportReport(currentReport, exportPath);
-            System.out.println("SUCCESS: Report exported to: " + exportPath);
+            System.out.println("\n[✓] SUCCESS: Report saved to '" + exportPath + "'.");
         } catch (IOException e) {
-            System.err.println("ERROR exporting report: " + e.getMessage());
-        }
-    }
-
-    private void launchWebMenu() {
-        System.out.println("\nStarting embedded Web Dashboard server on http://localhost:8080 ...");
-        try {
-            com.oopsproject.validator.server.WebServer server = new com.oopsproject.validator.server.WebServer(8080);
-            server.start();
-            server.openBrowser();
-            System.out.println("Web server started successfully in background at http://localhost:8080");
-        } catch (Exception e) {
-            System.err.println("Failed to start web server: " + e.getMessage());
+            System.err.println("\n[✗] ERROR exporting report: " + e.getMessage());
         }
     }
 
     private void launchGuiMenu() {
-        System.out.println("\nLaunching Desktop Swing GUI...");
+        System.out.println("\nLaunching Desktop Swing GUI window...");
         try {
-            javax.swing.SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() -> {
                 ValidatorGUI gui = new ValidatorGUI();
                 gui.setVisible(true);
             });
-            System.out.println("Desktop GUI window launched.");
+            System.out.println("[✓] Desktop GUI window opened.");
         } catch (Exception e) {
-            System.err.println("Failed to open GUI (check if display is available): " + e.getMessage());
+            System.err.println("[✗] Could not open GUI window (headless/display issue): " + e.getMessage());
         }
     }
 }

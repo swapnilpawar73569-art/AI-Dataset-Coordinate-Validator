@@ -2,20 +2,26 @@ package com.oopsproject.validator.service;
 
 import com.oopsproject.validator.exception.DatasetReadException;
 import com.oopsproject.validator.model.Coordinate;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DatasetLoader implementation for CSV files using Apache Commons CSV.
+ * Loads coordinate datasets from CSV files using standard Java BufferedReader.
+ * 
+ * Simple to explain to Sir:
+ * 1. Reads the file line-by-line using standard BufferedReader.
+ * 2. Parses the header row to detect column positions for label, latitude, and longitude.
+ * 3. Splits each data row by comma (",") using line.split().
+ * 4. Parses numbers using Double.parseDouble() with try-catch for NumberFormatException.
+ * 5. Returns a List of Coordinate objects.
  */
 public class CsvDatasetLoader implements DatasetLoader {
 
@@ -33,7 +39,7 @@ public class CsvDatasetLoader implements DatasetLoader {
             throw new DatasetReadException("Path is not a regular file: " + filePath);
         }
 
-        try (Reader reader = new FileReader(file, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
             return load(reader);
         } catch (IOException e) {
             throw new DatasetReadException("Failed to read CSV dataset file: " + e.getMessage(), e);
@@ -47,30 +53,53 @@ public class CsvDatasetLoader implements DatasetLoader {
         }
 
         List<Coordinate> coordinates = new ArrayList<>();
+        BufferedReader br = (reader instanceof BufferedReader) ? (BufferedReader) reader : new BufferedReader(reader);
 
-        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
-                .setHeader()
-                .setSkipHeaderRecord(true)
-                .setIgnoreSurroundingSpaces(true)
-                .setIgnoreEmptyLines(true)
-                .build();
+        try {
+            String headerLine = br.readLine();
+            if (headerLine == null) {
+                return coordinates; // Empty file
+            }
 
-        try (CSVParser parser = new CSVParser(reader, csvFormat)) {
+            // Detect column indices from header row
+            String[] headers = headerLine.split(",", -1);
+            int labelIdx = 0;
+            int latIdx = 1;
+            int lonIdx = 2;
 
+            for (int i = 0; i < headers.length; i++) {
+                String h = headers[i].trim().toLowerCase();
+                if (h.equals("label") || h.equals("name") || h.equals("id")) {
+                    labelIdx = i;
+                } else if (h.equals("latitude") || h.equals("lat")) {
+                    latIdx = i;
+                } else if (h.equals("longitude") || h.equals("lon") || h.equals("lng") || h.equals("long")) {
+                    lonIdx = i;
+                }
+            }
+
+            String line;
             int rowCounter = 1;
-            for (CSVRecord record : parser) {
-                String label = getColumnValue(record, "label", "id", "name");
-                String latStr = getColumnValue(record, "latitude", "lat");
-                String lonStr = getColumnValue(record, "longitude", "lon", "lng", "long");
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) {
+                    continue; // Skip empty rows
+                }
 
-                boolean latMissing = latStr == null || latStr.trim().isEmpty();
-                boolean lonMissing = lonStr == null || lonStr.trim().isEmpty();
+                String[] parts = line.split(",", -1);
+
+                String label = (labelIdx < parts.length) ? parts[labelIdx].trim() : "Row_" + rowCounter;
+                String latStr = (latIdx < parts.length) ? parts[latIdx].trim() : "";
+                String lonStr = (lonIdx < parts.length) ? parts[lonIdx].trim() : "";
+
+                boolean latMissing = latStr.isEmpty();
+                boolean lonMissing = lonStr.isEmpty();
 
                 Double latitude = null;
                 boolean latInvalidFormat = false;
                 if (!latMissing) {
                     try {
-                        latitude = Double.parseDouble(latStr.trim());
+                        latitude = Double.parseDouble(latStr);
                     } catch (NumberFormatException e) {
                         latInvalidFormat = true;
                     }
@@ -80,7 +109,7 @@ public class CsvDatasetLoader implements DatasetLoader {
                 boolean lonInvalidFormat = false;
                 if (!lonMissing) {
                     try {
-                        longitude = Double.parseDouble(lonStr.trim());
+                        longitude = Double.parseDouble(lonStr);
                     } catch (NumberFormatException e) {
                         lonInvalidFormat = true;
                     }
@@ -88,9 +117,9 @@ public class CsvDatasetLoader implements DatasetLoader {
 
                 Coordinate coord = new Coordinate(
                         rowCounter++,
-                        label != null ? label.trim() : "Row_" + rowCounter,
-                        latStr != null ? latStr.trim() : "",
-                        lonStr != null ? lonStr.trim() : "",
+                        label,
+                        latStr,
+                        lonStr,
                         latitude,
                         longitude,
                         latMissing,
@@ -103,27 +132,16 @@ public class CsvDatasetLoader implements DatasetLoader {
             }
         } catch (IOException e) {
             throw new DatasetReadException("Failed to read CSV dataset file: " + e.getMessage(), e);
-        } catch (IllegalArgumentException e) {
-            throw new DatasetReadException("Malformed CSV structure or header: " + e.getMessage(), e);
         }
 
         return coordinates;
     }
 
-    private String getColumnValue(CSVRecord record, String... possibleNames) {
-        for (String name : possibleNames) {
-            if (record.isMapped(name)) {
-                return record.get(name);
-            }
+    @Override
+    public List<Coordinate> loadFromString(String content) throws DatasetReadException {
+        if (content == null) {
+            throw new DatasetReadException("Dataset content cannot be null.");
         }
-        // Fallback to column index if headers weren't named expectedly
-        if (possibleNames[0].equalsIgnoreCase("label") && record.size() >= 1) {
-            return record.get(0);
-        } else if (possibleNames[0].equalsIgnoreCase("latitude") && record.size() >= 2) {
-            return record.get(1);
-        } else if (possibleNames[0].equalsIgnoreCase("longitude") && record.size() >= 3) {
-            return record.get(2);
-        }
-        return null;
+        return load(new StringReader(content));
     }
 }

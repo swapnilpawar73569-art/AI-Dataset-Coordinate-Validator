@@ -1,26 +1,19 @@
-# AI Dataset Coordinate Validator & Geographic Anomaly Detector
+# 📍 AI Dataset Coordinate Validator & Geographic Anomaly Detector
+### Pure Java 17 Object-Oriented Programming (OOP) Project
 
-A high-performance Java 17 Object-Oriented Programming (OOP) project that ingests, validates, and visualizes geographic coordinate datasets (CSV/JSON) for AI and machine learning pipelines.
+A clean, standard, 100% pure Java project that ingests, validates, and reports geographic coordinate datasets (CSV / JSON) for AI and machine learning pipelines.
 
-It features **interactive spatial map visualization**, range checks, format checks, duplicate detection, statistical outlier detection (IQR), regional bounding box enforcement, and multi-format reporting.
+> **Designed for OOP Viva & Code Reviews**: Built strictly using core Java principles (Encapsulation, Inheritance, Polymorphism, Abstraction, Exception Handling, Collections, and File I/O) without web servers, external frontend languages, or unnecessary frameworks.
 
 ---
 
-## 🌟 Highlights & Key Features
+## 🌟 Highlights & Features
 
-- **🌐 Interactive Web Dashboard**: Embedded zero-dependency HTTP server serving a modern dark-mode dashboard with:
-  - **Leaflet.js World Map**: Real-time pin mapping with color-coded status (Valid, Out-of-Range, Outliers, Duplicates, BBox breaches).
-  - **Bounding Box Overlay**: Visual boundary rectangle rendered on the world map.
-  - **Executive KPI Cards**: Real-time stat counters (Total, Valid Rate %, Critical Errors, Outliers, Duplicates).
-  - **Interactive Data Explorer**: Search & filter table with click-to-focus map animation.
-  - **Multi-Format Export**: One-click download as HTML Report, CSV, JSON, or TXT.
-- **🖥️ Desktop Swing GUI**: Full-featured desktop GUI with KPI stat cards, real-time table search, and file picker dialogs.
-- **💻 Interactive Terminal CLI**: Console menu for terminal-based workflow and batch scripts.
-- **🏗️ Pure OOP Architecture**:
-  - **Strategy Pattern**: Pluggable validation rules (`RangeValidator`, `FormatValidator`, `DuplicateValidator`, `PrecisionValidator`, `OutlierValidator`, `BoundingBoxValidator`).
-  - **Factory Pattern**: `DatasetLoaderFactory` dynamically dispatching CSV and JSON loaders.
-  - **Polymorphism & Inheritance**: `AbstractValidator` base class and custom HTTP handlers extending JDK's `HttpHandler`.
-  - **Custom Exception Hierarchy**: `ValidationException` root with `DatasetReadException`, `UnsupportedFormatException`, and `InvalidDatasetException`.
+- **💻 Pure Java Interactive Console Menu**: Standard terminal menu using `java.util.Scanner` with options to load files, run validations, inspect row results, and export reports.
+- **🖥️ Desktop Swing GUI**: Full Java desktop window (`javax.swing`) with KPI metric cards, searchable table, and file dialogs.
+- **🏗️ 100% Core Java File I/O**: Reads CSV files using standard `BufferedReader` and `FileReader` without external CSV parser libraries.
+- **🛡️ Custom Exception Hierarchy**: Structured exceptions extending `java.lang.Exception`.
+- **🧪 15 Comprehensive JUnit 5 Tests**: 100% pass rate covering models, loaders, validators, and report exporters.
 
 ---
 
@@ -28,84 +21,164 @@ It features **interactive spatial map visualization**, range checks, format chec
 
 ```
 AI-Dataset-Coordinate-Validator/
-├── pom.xml
-├── mvnw / mvnw.cmd                  # Maven wrapper scripts
+├── pom.xml                                   # Clean Maven configuration (Java 17, JUnit 5, Gson)
+├── mvnw / mvnw.cmd                           # Standard Maven wrapper
 ├── data/
-│   ├── sample_coordinates.csv       # Sample CSV dataset for testing
-│   └── sample_coordinates.json      # Sample JSON dataset for testing
-├── web/                             # Standalone Web Dashboard assets
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── src/
-│   ├── main/
-│   │   ├── java/com/oopsproject/validator/
-│   │   │   ├── Main.java            # Entry point supporting --web, --gui, and --cli
-│   │   │   ├── model/               # Coordinate, ValidationResult, ValidationReport
-│   │   │   ├── service/             # ValidationEngine, DatasetLoaderFactory, Validators
-│   │   │   ├── server/              # WebServer with embedded REST API & static file serving
-│   │   │   ├── exception/           # Custom exception hierarchy
-│   │   │   ├── util/                # Exporters: Html, Csv, Json, Txt ReportExporters
-│   │   │   └── ui/                  # ValidatorGUI (Swing) & ConsoleMenu (CLI)
-│   │   └── resources/web/           # Packaged Web Dashboard assets inside JAR
-│   └── test/java/com/oopsproject/validator/   # JUnit 5 test suite (21 unit tests)
+│   ├── sample_coordinates.csv                # Sample CSV dataset for testing
+│   └── sample_coordinates.json               # Sample JSON dataset for testing
+└── src/
+    ├── main/java/com/oopsproject/validator/
+    │   ├── Main.java                         # Main entry point (Console / Desktop GUI)
+    │   ├── model/
+    │   │   ├── Coordinate.java               # Encapsulated model (private fields, getters/setters)
+    │   │   ├── ValidationResult.java         # Result per coordinate row
+    │   │   └── ValidationReport.java         # Aggregated metrics & collection of results
+    │   ├── service/
+    │   │   ├── Validator.java                # Interface defining validation contract (Abstraction)
+    │   │   ├── AbstractValidator.java        # Base class (Inheritance & Template Method)
+    │   │   ├── RangeValidator.java           # Checks lat [-90, 90] & lon [-180, 180]
+    │   │   ├── FormatValidator.java          # Checks missing values and format errors
+    │   │   ├── DuplicateValidator.java       # Detects duplicate coordinates using Collections
+    │   │   ├── OutlierValidator.java         # Detects statistical anomalies (Z-Score)
+    │   │   ├── PrecisionValidator.java       # Enforces minimum decimal precision
+    │   │   ├── BoundingBoxValidator.java     # Enforces regional bounding box boundaries
+    │   │   ├── ValidationEngine.java         # Aggregates validators & executes pipeline (Polymorphism)
+    │   │   ├── DatasetLoader.java            # Interface for dataset loaders
+    │   │   ├── DatasetLoaderFactory.java     # Factory pattern dispatching loaders
+    │   │   ├── CsvDatasetLoader.java         # Pure Java BufferedReader CSV loader
+    │   │   └── JsonDatasetLoader.java        # JSON dataset loader
+    │   ├── exception/
+    │   │   ├── ValidationException.java      # Root custom checked exception
+    │   │   ├── InvalidDatasetException.java  # Thrown when file cannot be loaded
+    │   │   ├── DatasetReadException.java     # File read / I/O errors
+    │   │   └── UnsupportedFormatException.java # Unsupported file extensions
+    │   ├── util/
+    │   │   ├── ReportExporter.java           # Strategy interface for exporting
+    │   │   ├── TxtReportExporter.java        # Pure Java PrintWriter plain text exporter
+    │   │   ├── CsvReportExporter.java        # Pure Java CSV report exporter
+    │   │   ├── JsonReportExporter.java       # JSON format exporter
+    │   │   └── ReportGenerator.java          # Report orchestration helper
+    │   └── ui/
+    │       ├── ConsoleMenu.java              # Interactive terminal CLI using java.util.Scanner
+    │       └── ValidatorGUI.java             # Pure Java Swing desktop interface
+    └── test/java/com/oopsproject/validator/  # JUnit 5 test suite (15 unit tests)
 ```
 
 ---
 
-## 🚀 Quick Start & How to Run
+## 🚀 How to Run
 
-### 1. Build and Run Tests
+### 1. Run Tests (Verify Everything Works)
 ```bash
 ./mvnw clean test
 ```
-All 21 JUnit 5 tests covering models, loaders, validators, and REST API endpoints will execute.
+*Expected: 15 tests run, 0 failures, BUILD SUCCESS.*
 
-### 2. Launch the Application
-
-#### Option A: Web Dashboard (Recommended / Default)
+### 2. Run Interactive Console Menu (Default)
 ```bash
 ./mvnw exec:java
 ```
-Or explicitly specify port:
+Or directly with Java:
 ```bash
-./mvnw exec:java -Dexec.args="--web -p 8080"
+java -cp target/classes:target/dependency/* com.oopsproject.validator.Main
 ```
-Then open your browser at **`http://localhost:8080/`**.
+Press `1` and hit **Enter** to load the sample CSV dataset, then `2` to run validation, and `3` to view the report!
 
-#### Option B: Desktop Swing GUI
-```bash
-./mvnw exec:java -Dexec.args="--gui"
-```
-
-#### Option C: Interactive Terminal CLI
-```bash
-./mvnw exec:java -Dexec.args="--cli"
-```
-Or auto-load a dataset:
+### 3. Run with Auto-Loaded Dataset File
 ```bash
 ./mvnw exec:java -Dexec.args="data/sample_coordinates.csv"
 ```
 
+### 4. Run Desktop Swing GUI
+```bash
+./mvnw exec:java -Dexec.args="--gui"
+```
+
 ---
 
-## 📋 Course Checklist
+## 🎓 How to Explain to Sir (OOP Concepts Cheatsheet)
 
-### Phase 1 — Mid-Sem (Basic Features)
-- [x] `Coordinate` model class (encapsulation: private fields + getters/setters)
-- [x] `DatasetLoader` — read CSV and JSON into `List<Coordinate>`
-- [x] `Validator` interface + multiple implementations:
-  - Range check (latitude -90 to 90, longitude -180 to 180)
-  - Format/missing-value check
-- [x] Basic console output of valid vs invalid rows
-- [x] Interactive `ConsoleMenu` to load a file and trigger validation
-- [x] Demonstrate core OOP: encapsulation, inheritance, interfaces, polymorphism
+When Sir asks you to explain the code or make live changes during your viva, use these points:
 
-### Phase 2 — End-Sem (Advanced Features)
-- [x] Additional validators: duplicate detection, IQR outlier/anomaly detection, decimal precision checks, regional bounding box checks
-- [x] Custom exception hierarchy (`ValidationException`, `DatasetReadException`, `UnsupportedFormatException`, `InvalidDatasetException`)
-- [x] Multi-format export: HTML, CSV, JSON, and TXT
-- [x] Desktop GUI using Java Swing with KPI stat cards, search & filter
-- [x] Modern Web Dashboard with Leaflet map visualization and REST API
-- [x] 21 Unit tests (JUnit 5) with 100% pass rate
-- [x] Design patterns: Strategy Pattern for validators, Factory Pattern for loaders, Observer Pattern for UI events
+### 1. Encapsulation
+- **Where**: `model/Coordinate.java`
+- **Explanation**: All coordinate fields (`latitude`, `longitude`, `label`, `rowNumber`) are declared as **`private`**. They cannot be modified directly from outside the class. Public getters and setters (`getLatitude()`, `getLongitude()`, etc.) control how data is accessed and modified.
+- **Data Hiding**: Internal flags like `latitudeMissing` and `latitudeInvalidFormat` track corrupt values without throwing unhandled exceptions.
+
+### 2. Abstraction
+- **Where**: `service/Validator.java` and `service/DatasetLoader.java`
+- **Explanation**: We use Java `interface` to declare what operations must be performed (`isValid()`, `getErrorMessage()`, `load()`) without showing the internal implementation details.
+
+### 3. Inheritance
+- **Where**: `service/AbstractValidator.java` and its subclasses (`RangeValidator`, `FormatValidator`, `DuplicateValidator`, `BoundingBoxValidator`, `OutlierValidator`, `PrecisionValidator`).
+- **Explanation**: `AbstractValidator` provides shared validation logic (`isNullOrUnparseable()`). Each concrete validator uses `extends AbstractValidator` to inherit this behavior and implement `doValidate()`.
+
+### 4. Polymorphism
+- **Where**: `service/ValidationEngine.java`
+- **Explanation**: `ValidationEngine` maintains a `List<Validator>`. When validating a row, it loops through each validator using the common interface:
+  ```java
+  for (Validator validator : validators) {
+      if (!validator.isValid(coord, dataset)) {
+          result.addError(validator.getErrorMessage(coord, dataset));
+      }
+  }
+  ```
+  The JVM dynamically calls the specific `isValid()` method of the actual subclass at runtime (Dynamic Method Dispatch).
+
+### 5. Custom Exception Handling
+- **Where**: `exception/` package
+- **Hierarchy**:
+  - `ValidationException` (extends `Exception`) — Root checked exception
+    - `InvalidDatasetException`
+      - `DatasetReadException`
+      - `UnsupportedFormatException`
+- **Explanation**: Custom exceptions provide meaningful, domain-specific error messages instead of generic crashes. Handled using `try-catch` blocks in `ConsoleMenu.java` and `ValidatorGUI.java`.
+
+### 6. Collections Framework
+- **Where**: `List<Coordinate>` (`ArrayList`), `Set<Coordinate>` / `HashSet`
+- **Explanation**:
+  - `ArrayList` is used to store datasets because it offers fast index-based retrieval and dynamic resizing.
+  - In `DuplicateValidator.java`, we compare coordinates to detect duplicate entries across rows.
+
+### 7. File I/O (Input / Output)
+- **Where**: `service/CsvDatasetLoader.java` and `util/TxtReportExporter.java`
+- **Explanation**:
+  - **Reading**: Uses `BufferedReader` wrapped around `FileReader` inside a `try-with-resources` block for automatic resource closing. Rows are read line-by-line using `readLine()` and parsed using `line.split(",")`.
+  - **Writing**: Uses `PrintWriter` wrapped around `FileWriter` to write report files to disk.
+
+### 8. Design Patterns Used
+- **Strategy Pattern**: Each validation check (`RangeValidator`, `FormatValidator`, etc.) is an independent strategy implementing `Validator`.
+- **Factory Pattern**: `DatasetLoaderFactory.getLoader(path)` dynamically returns `CsvDatasetLoader` or `JsonDatasetLoader` based on file extension.
+
+---
+
+## 🛠️ How to Make Common Changes (If Sir Asks in Lab)
+
+1. **"Change the Latitude/Longitude valid range"**:
+   - Open `src/main/java/com/oopsproject/validator/service/RangeValidator.java`
+   - Modify `MIN_LATITUDE`, `MAX_LATITUDE`, `MIN_LONGITUDE`, or `MAX_LONGITUDE`.
+
+2. **"Add a new Validation Rule"**:
+   - Create a new class extending `AbstractValidator`:
+     ```java
+     public class HemisphereValidator extends AbstractValidator {
+         @Override
+         public String getRuleName() { return "Northern Hemisphere Check"; }
+         @Override
+         protected boolean doValidate(Coordinate c, List<Coordinate> d) {
+             return c.getLatitude() != null && c.getLatitude() >= 0;
+         }
+         @Override
+         public String getErrorMessage(Coordinate c, List<Coordinate> d) {
+             return "Coordinate must be in Northern Hemisphere";
+         }
+     }
+     ```
+   - Register it in `ValidationEngine.createDefaultEngine()` with:
+     ```java
+     engine.addValidator(new HemisphereValidator());
+     ```
+
+3. **"Change the Bounding Box boundaries"**:
+   - Open `src/main/java/com/oopsproject/validator/service/BoundingBoxValidator.java`
+   - Modify the default constructor coordinates (e.g. `minLat`, `maxLat`, `minLon`, `maxLon`).
